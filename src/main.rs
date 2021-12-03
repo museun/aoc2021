@@ -37,13 +37,14 @@ fn main() {
                 .lines()
                 .fold([0_i32, 0_i32], |mut t, s| {
                     s.split_once(' ')
-                        .and_then(|(a, b)| b.parse::<i32>().ok().map(|b| (a, b)))
-                        .map(|(dir, amt)| match dir {
-                            "up" => t[0] -= amt,
-                            "down" => t[0] += amt,
-                            "forward" => t[1] += amt,
-                            _ => (),
+                        .and_then(|(a, b)| b.parse().ok().map(|b| (a, b)))
+                        .map::<(fn(&mut i32, i32), usize, i32), _>(|(dir, amt)| match dir {
+                            "up" => (<_ as std::ops::SubAssign>::sub_assign, 0, amt),
+                            "down" => (<_ as std::ops::AddAssign>::add_assign, 0, amt),
+                            "forward" => (<_ as std::ops::AddAssign>::add_assign, 1, amt),
+                            _ => unreachable!(),
                         })
+                        .map(|(f, i, amt)| f(&mut t[i], amt))
                         .map(|_| t)
                         .unwrap()
                 })
