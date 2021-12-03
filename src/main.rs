@@ -58,18 +58,16 @@ fn main() {
                 .fold([0_i32, 0_i32, 0_i32], |mut t, s| {
                     s.split_once(' ')
                         .and_then(|(a, b)| b.parse::<i32>().ok().map(|b| (a, b)))
-                        .and_then(|(dir, amt)| {
-                            Some(match dir {
-                                "up" => t[2] -= amt,
-                                "down" => t[2] += amt,
-                                "forward" => t[0] += t[2] * amt,
-                                _ => (),
-                            })
-                            .map(|_| match dir {
-                                "forward" => t[1] += amt,
-                                _ => (),
-                            })
+                        .map::<Vec<(fn(&mut i32, i32), _, _)>, _>(|(dir, amt)| match dir {
+                            "up" => vec![(<_ as std::ops::SubAssign>::sub_assign, 2, amt)],
+                            "down" => vec![(<_ as std::ops::AddAssign>::add_assign, 2, amt)],
+                            "forward" => vec![
+                                (<_ as std::ops::AddAssign>::add_assign, 0, t[2] * amt),
+                                (<_ as std::ops::AddAssign>::add_assign, 1, amt),
+                            ],
+                            _ => unreachable!(),
                         })
+                        .map(|v| v.into_iter().for_each(|(f, i, amt)| f(&mut t[i], amt)))
                         .map(|_| t)
                         .unwrap()
                 })
