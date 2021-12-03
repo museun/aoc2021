@@ -37,14 +37,12 @@ fn main() {
                 .lines()
                 .fold([0_i32, 0_i32], |mut t, s| {
                     s.split_once(' ')
-                        .map(|(a, b)| (a, b.parse::<i32>().unwrap_or_default()))
-                        .map(|(dir, amt)| {
-                            Some(match dir {
-                                "up" => t[0] -= amt,
-                                "down" => t[0] += amt,
-                                "forward" => t[1] += amt,
-                                _ => return None,
-                            })
+                        .and_then(|(a, b)| b.parse::<i32>().ok().map(|b| (a, b)))
+                        .map(|(dir, amt)| match dir {
+                            "up" => t[0] -= amt,
+                            "down" => t[0] += amt,
+                            "forward" => t[1] += amt,
+                            _ => (),
                         })
                         .map(|_| t)
                         .unwrap()
@@ -70,7 +68,6 @@ fn main() {
                                 "forward" => t[1] += amt,
                                 _ => (),
                             })
-                            .map(|_| (dir, amt))
                         })
                         .map(|_| t)
                         .unwrap()
