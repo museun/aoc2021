@@ -1,4 +1,7 @@
-#![cfg_attr(debug_assertions, allow(dead_code, unused_variables, unreachable_code))]
+#![cfg_attr(
+    debug_assertions,
+    allow(dead_code, unused_variables, unreachable_code, unused_must_use)
+)]
 fn main() {
     <&[(_, _, fn(String) -> String)]>::into_iter(&[
         (1, 1, move |input| {
@@ -178,19 +181,39 @@ fn main() {
         (25, 1, move |input| todo!() as _),
         (25, 2, move |input| todo!() as _),
     ])
-    .flat_map(|(day, part, func)| {
-        std::fs::read_to_string(&format!(
-            "./input/day_{day}_{part}.txt",
-            day = day,
-            part = part
-        ))
-        .map(|out| {
-            println!(
-                "day {day}, part: {part}: {solution}",
-                day = day,
-                part = part,
-                solution = func(out)
-            )
+    .filter_map(|(day, part, func)| {
+        std::iter::once(
+            std::env::args()
+                .skip(1)
+                .take(2)
+                .flat_map(|s| s.parse::<i32>())
+                .collect::<Vec<_>>(),
+        )
+        .next()
+        .map(|v| {
+            matches!(&v[..], [_, _])
+                .then(|| {
+                    (*day == v[0] && *part == v[1])
+                        .then(|| {
+                            std::fs::read_to_string(&format!(
+                                "./input/day_{day}_{part}.txt",
+                                day = day,
+                                part = part
+                            ))
+                            .map(|out| {
+                                println!(
+                                    "day {day}, part: {part}: {solution}",
+                                    day = day,
+                                    part = part,
+                                    solution = func(out)
+                                )
+                            })
+                        })
+                        .transpose()
+                        .unwrap_or_default()
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default()
         })
     })
     .last()
