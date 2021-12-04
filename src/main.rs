@@ -135,7 +135,84 @@ fn main() {
                 .unwrap()
                 .to_string()
         } as _),
-        (3, 2, move |input| todo!() as _),
+        (3, 2, move |input| {
+            input
+                .lines()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.chars().collect::<Vec<_>>())
+                .map(Some)
+                .collect::<Option<Vec<_>>>()
+                .into_iter()
+                .map(|t| {
+                    Some([t.clone(), t])
+                        .into_iter()
+                        .map(|[mut o2, mut co2]| {
+                            std::iter::once(
+                                (0..o2.len())
+                                    .map(|i| {
+                                        (co2.len() != 1 || o2.len() != 1)
+                                            .then(|| {
+                                                [
+                                                    (
+                                                        &mut o2,
+                                                        (move |z, o| z <= o)
+                                                            as fn(usize, usize) -> bool,
+                                                    ),
+                                                    (
+                                                        &mut co2,
+                                                        (move |z, o| z > o)
+                                                            as fn(usize, usize) -> bool,
+                                                    ),
+                                                ]
+                                                .into_iter()
+                                                .filter(|(a, _)| a.len() != 1)
+                                                .map(|(a, cmp)| {
+                                                    std::iter::once(['0', '1'].map(|p| {
+                                                        (&*a)
+                                                            .iter()
+                                                            .filter(|x| x[i] == p)
+                                                            .cloned()
+                                                            .collect::<Vec<_>>()
+                                                    }))
+                                                    .next()
+                                                    .map(|[zeroes, ones]| {
+                                                        *a = cmp(zeroes.len(), ones.len())
+                                                            .then(|| ones)
+                                                            .unwrap_or_else(|| zeroes)
+                                                    })
+                                                })
+                                                .last()
+                                            })
+                                            .map(drop)
+                                            .unwrap_or_default()
+                                    })
+                                    .last(),
+                            )
+                            .next()
+                            .map(|_| {
+                                [&o2[0], &co2[0]]
+                                    .map(|n| {
+                                        Some(n.iter().rev().fold((0, 0), |(a, b), y| {
+                                            (*y == '0')
+                                                .then(|| (a, b + 1))
+                                                .unwrap_or_else(|| (a + (1usize << b), b + 1))
+                                        }))
+                                        .map(|(x, _)| x)
+                                        .unwrap()
+                                    })
+                                    .into_iter()
+                                    .product::<usize>()
+                            })
+                            .unwrap_or_default()
+                        })
+                        .last()
+                        .unwrap()
+                })
+                .last()
+                .unwrap()
+                .to_string()
+        } as _),
         (4, 1, move |input| todo!() as _),
         (4, 2, move |input| todo!() as _),
         (5, 1, move |input| todo!() as _),
