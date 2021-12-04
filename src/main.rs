@@ -1,3 +1,4 @@
+#![cfg_attr(debug_assertions, allow(dead_code, unused_variables, unreachable_code))]
 fn main() {
     <&[(_, _, fn(String) -> String)]>::into_iter(&[
         (1, 1, move |input| {
@@ -75,6 +76,66 @@ fn main() {
                 .take(2)
                 .product::<i32>()
                 .to_string()
+        } as _),
+        (3, 1, move |input| {
+            input
+                .lines()
+                .map(|s| s.trim().chars().map(|c| c as u8 - b'0').collect())
+                .map(Some)
+                .collect::<Option<Vec<Vec<_>>>>()
+                .into_iter()
+                .map(|s| {
+                    s.into_iter()
+                        .enumerate()
+                        .flat_map(|(x, e)| e.into_iter().enumerate().map(move |(y, f)| (x, y, f)))
+                        .fold::<Vec<Vec<_>>, _>(
+                            std::iter::repeat(
+                                std::iter::repeat(0_u8)
+                                    .take(input.lines().count())
+                                    .collect(),
+                            )
+                            .take(input.lines().map(str::len).max().unwrap_or_default())
+                            .collect(),
+                            |mut v, (x, y, e)| Some(v[y][x] = e).map(|_| v).unwrap(),
+                        )
+                })
+                .last()
+                .into_iter()
+                .map(|seq| {
+                    [<_ as Iterator>::max_by, <_ as Iterator>::min_by]
+                        .into_iter()
+                        .map(|f| {
+                            seq.iter()
+                                .flat_map(|s| {
+                                    f(
+                                        s.iter()
+                                            .fold(
+                                                <std::collections::HashMap<u8, usize>>::new(),
+                                                |mut h, a| {
+                                                    std::iter::once(*h.entry(*a).or_default() += 1)
+                                                        .next()
+                                                        .map(|_| h)
+                                                        .unwrap()
+                                                },
+                                            )
+                                            .into_iter(),
+                                        |(_, l): &(u8, usize), (_, r): &(u8, usize)| l.cmp(&r),
+                                    )
+                                    .map(|(k, _)| k)
+                                })
+                                .map(|a| a as usize)
+                                .fold(0usize, |g, a| 2 * g + a)
+                        })
+                        .product::<usize>()
+                })
+                .last()
+                .unwrap()
+                .to_string()
+        } as _),
+        (3, 2, move |input| {
+            // input
+            // .lines()
+            todo!();
         } as _),
     ])
     .flat_map(|(day, part, func)| {
