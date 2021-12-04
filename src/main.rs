@@ -253,36 +253,45 @@ fn main() {
             std::env::args()
                 .skip(1)
                 .take(2)
-                .flat_map(|s| s.parse::<i32>())
-                .collect::<Vec<_>>(),
+                .flat_map(|s| s.parse())
+                .collect(),
         )
         .next()
-        .map(|v| {
+        .and_then(|v: Vec<i32>| {
             matches!(&v[..], [_, _])
                 .then(|| {
-                    (*day == v[0] && *part == v[1])
-                        .then(|| {
-                            std::fs::read_to_string(&format!(
-                                "./input/day_{day}_{part}.txt",
+                    (*day == v[0] && *part == v[1]).then(|| {
+                        std::fs::read_to_string(&format!(
+                            "./input/day_{day}_{part}.txt",
+                            day = day,
+                            part = part
+                        ))
+                        .ok()
+                        .map(|out| {
+                            println!(
+                                "day {day}, part: {part}: {solution}",
                                 day = day,
-                                part = part
-                            ))
-                            .map(|out| {
-                                println!(
-                                    "day {day}, part: {part}: {solution}",
-                                    day = day,
-                                    part = part,
-                                    solution = func(out)
-                                )
-                            })
+                                part = part,
+                                solution = func(out)
+                            )
                         })
-                        .transpose()
-                        .unwrap_or_default()
-                        .unwrap_or_default()
+                    })
                 })
-                .unwrap_or_default()
+                .flatten()
+                .unwrap_or_else(|| {
+                    [
+                        || eprintln!("usage: [day] [part]"),
+                        || std::process::exit(1),
+                    ]
+                    .into_iter()
+                    .map(|f| f())
+                    .map(Some)
+                    .last()
+                    .unwrap()
+                })
         })
     })
     .last()
+    .map(drop)
     .unwrap_or_default()
 }
