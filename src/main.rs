@@ -151,10 +151,17 @@ fn main() {
                                 (co2.len() == 1 && o2.len() == 1)
                                     .then(|| ())
                                     .unwrap_or_else(|| {
-                                        <[(_, fn(usize, usize) -> bool); 2]>::into_iter([
-                                            (&mut o2, (move |z, o| z <= o)),
-                                            (&mut co2, (move |z, o| z > o)),
-                                        ])
+                                        [
+                                            (
+                                                &mut o2,
+                                                (move |z, o| z <= o) as fn(usize, usize) -> bool,
+                                            ),
+                                            (
+                                                &mut co2,
+                                                (move |z, o| z > o) as fn(usize, usize) -> bool,
+                                            ),
+                                        ]
+                                        .into_iter()
                                         .filter(|(a, _)| a.len() != 1)
                                         .map(|(a, cmp)| {
                                             std::iter::once([0, 1].map(|p| {
