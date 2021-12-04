@@ -144,63 +144,58 @@ fn main() {
                 .map(Iterator::collect)
                 .map(Some)
                 .collect::<Option<_>>()
-                .into_iter()
-                .map(|input: Vec<Vec<_>>| {
-                    Some([input.clone(), input])
-                        .into_iter()
-                        .map(|[mut o2, mut co2]| {
-                            (0..o2.len())
-                                .map(|i| {
-                                    (co2.len() == 1 && o2.len() == 1)
-                                        .then(|| ())
-                                        .unwrap_or_else(|| {
-                                            <[(_, fn(usize, usize) -> bool); 2]>::into_iter([
-                                                (&mut o2, (move |z, o| z <= o)),
-                                                (&mut co2, (move |z, o| z > o)),
-                                            ])
-                                            .filter(|(a, _)| a.len() != 1)
-                                            .map(|(a, cmp)| {
-                                                std::iter::once([0, 1].map(|p| {
-                                                    Some(a.clone())
-                                                        .and_then(|mut a| {
-                                                            Some(a.retain(|x| x[i] == p)).map(|_| a)
-                                                        })
-                                                        .unwrap()
-                                                }))
-                                                .next()
-                                                .map(|[zeroes, ones]| {
+                .and_then(|input: Vec<Vec<_>>| {
+                    Some([input.clone(), input]).and_then(|[mut o2, mut co2]| {
+                        (0..o2.len())
+                            .map(|i| {
+                                (co2.len() == 1 && o2.len() == 1)
+                                    .then(|| ())
+                                    .unwrap_or_else(|| {
+                                        <[(_, fn(usize, usize) -> bool); 2]>::into_iter([
+                                            (&mut o2, (move |z, o| z <= o)),
+                                            (&mut co2, (move |z, o| z > o)),
+                                        ])
+                                        .filter(|(a, _)| a.len() != 1)
+                                        .map(|(a, cmp)| {
+                                            std::iter::once([0, 1].map(|p| {
+                                                Some(a.clone())
+                                                    .and_then(|mut a| {
+                                                        Some(a.retain(|x| x[i] == p)).map(|_| a)
+                                                    })
+                                                    .unwrap()
+                                            }))
+                                            .next()
+                                            .map(
+                                                |[zeroes, ones]| {
                                                     *a = cmp(zeroes.len(), ones.len())
                                                         .then(|| ones)
                                                         .unwrap_or_else(|| zeroes)
-                                                })
-                                            })
-                                            .last()
-                                            .map(drop)
-                                            .unwrap_or_default()
+                                                },
+                                            )
                                         })
-                                })
-                                .last()
-                                .map(|_| {
-                                    [&o2[0], &co2[0]]
-                                        .map(|n| {
-                                            Some(n.iter().rev().fold((0, 0), |(a, b), y| {
-                                                (*y == 0)
-                                                    .then(|| (a, b + 1))
-                                                    .unwrap_or_else(|| (a + (1usize << b), b + 1))
-                                            }))
-                                            .map(|(x, _)| x)
-                                            .unwrap()
-                                        })
-                                        .into_iter()
-                                        .product::<usize>()
-                                })
-                                .unwrap_or_default()
-                        })
-                        .last()
-                        .unwrap()
+                                        .last()
+                                        .map(drop)
+                                        .unwrap_or_default()
+                                    })
+                            })
+                            .last()
+                            .map(|_| {
+                                [&o2[0], &co2[0]]
+                                    .map(|n| {
+                                        Some(n.iter().rev().fold((0, 0), |(a, b), y| {
+                                            (*y == 0)
+                                                .then(|| (a, b + 1))
+                                                .unwrap_or_else(|| (a + (1 << b), b + 1))
+                                        }))
+                                        .map(|(x, _)| x)
+                                        .unwrap()
+                                    })
+                                    .into_iter()
+                                    .product::<usize>()
+                            })
+                    })
                 })
-                .last()
-                .unwrap()
+                .unwrap_or_default()
                 .to_string()
         } as _),
         (4, 1, move |input| todo!() as _),
