@@ -1,7 +1,4 @@
-#![cfg_attr(
-    debug_assertions,
-    allow(dead_code, unused_variables, unreachable_code, unused_must_use)
-)]
+#![cfg_attr(debug_assertions, allow(dead_code, unused_variables, unreachable_code))]
 fn main() {
     <&[(_, _, fn(String) -> String)]>::into_iter(&[
         (1, 1, move |input| {
@@ -259,10 +256,22 @@ fn main() {
                 .collect(),
         )
         .next()
-        .and_then(|v: Vec<i32>| {
-            matches!(&v[..], [_, _])
-                .then(|| {
-                    (*day == v[0] && *part == v[1]).then(|| {
+        .map(|v: Vec<i32>| {
+            (matches!(&v[..], [d, p] if (*d > 25 || *d == 0) || (*p > 2 || *p == 0))
+                || matches!(&v[..], [] | [_] | [_, _, _, ..]))
+            .then(|| {
+                [
+                    || eprintln!("usage: [day] [part]"),
+                    || std::process::exit(1),
+                ]
+                .into_iter()
+                .map(|f| f())
+                .last()
+                .unwrap_or_default()
+            })
+            .unwrap_or_else(|| {
+                (*day == v[0] && *part == v[1])
+                    .then(|| {
                         std::fs::read_to_string(&format!(
                             "./input/day_{day}_{part}.txt",
                             day = day,
@@ -277,20 +286,21 @@ fn main() {
                                 solution = func(out)
                             )
                         })
+                        .map(drop)
+                        .unwrap_or_else(|| {
+                            std::iter::once(format!(
+                                "cannot find input for day {}, part {}",
+                                v[0], v[1]
+                            ))
+                            .map(|s| eprintln!("{}", s))
+                            .map(drop)
+                            .map(|_| std::process::exit(1))
+                            .last()
+                            .unwrap_or_default()
+                        })
                     })
-                })
-                .flatten()
-                .unwrap_or_else(|| {
-                    [
-                        || eprintln!("usage: [day] [part]"),
-                        || std::process::exit(1),
-                    ]
-                    .into_iter()
-                    .map(|f| f())
-                    .map(Some)
-                    .last()
-                    .unwrap()
-                })
+                    .unwrap_or_default()
+            })
         })
     })
     .last()
